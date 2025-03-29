@@ -1,6 +1,6 @@
 package com.weather.forecast.model;
 
-public class WeatherResponse {
+public class DeprecatedWeatherResponse {
 
     private Main main;
     private Weather[] weather;
