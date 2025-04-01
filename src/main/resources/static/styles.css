@@ -1,0 +1,16 @@
+body {
+    background-color: #f5f5f5;
+}
+
+.weather-icon {
+    font-size: 3rem;
+}
+
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card-header {
+    border-radius: 0 !important;
+}

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::section})}">
+<head>
+  <title>Error - Weather Forecast</title>
+</head>
+<body>
+<section>
+  <div class="row">
+    <div class="col-md-8 mx-auto">
+      <div class="card shadow border-danger">
+        <div class="card-header bg-danger text-white">
+          <h3 class="card-title mb-0">Error</h3>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-danger">
+            <h4 class="alert-heading" th:text="${errorMessage}">Error Message</h4>
+            <p th:if="${errorDetails != null}" th:text="${errorDetails}" class="mb-0">Error details...</p>
+          </div>
+          <a href="/" class="btn btn-primary">Return to Home</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>
