@@ -45,6 +45,18 @@ public class WeatherMapper {
         cityService.saveCity(city);
     }
 
+    public void updateCityFromResponse(City city, OpenWeatherMapForecastResponse response) {
+        if (response.getCity() != null) {
+            city.setCountry(response.getCity().getCountry());
+
+            if (response.getCity().getCoord() != null) {
+                city.setLatitude(response.getCity().getCoord().getLat());
+                city.setLongitude(response.getCity().getCoord().getLon());
+            }
+        }
+        cityService.saveCity(city);
+    }
+
     public CurrentWeather mapToCurrentWeather(City city, OpenWeatherMapResponse response) {
         CurrentWeather weather = new CurrentWeather();
 
