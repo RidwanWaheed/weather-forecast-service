@@ -7,6 +7,7 @@ import com.weather.forecast.dto.WeatherResponse;
 import com.weather.forecast.model.City;
 import com.weather.forecast.model.CurrentWeather;
 import com.weather.forecast.model.Forecast;
+import com.weather.forecast.repository.CurrentWeatherRepository;
 import com.weather.forecast.service.CityService;
 import org.springframework.stereotype.Component;
 
@@ -21,9 +22,11 @@ import java.util.stream.Collectors;
 public class WeatherMapper {
 
     private final CityService cityService;
+    private final CurrentWeatherRepository currentWeatherRepository;
 
-    public WeatherMapper(CityService cityService) {
+    public WeatherMapper(CityService cityService, CurrentWeatherRepository currentWeatherRepository) {
         this.cityService = cityService;
+        this.currentWeatherRepository = currentWeatherRepository;
     }
 
     public boolean isDataFresh(LocalDateTime timestamp) {
@@ -58,7 +61,7 @@ public class WeatherMapper {
     }
 
     public CurrentWeather mapToCurrentWeather(City city, OpenWeatherMapResponse response) {
-        CurrentWeather weather = new CurrentWeather();
+        CurrentWeather weather = currentWeatherRepository.findByCityId(city.getId()).orElse(new CurrentWeather());
 
         weather.setCity(city);
         weather.setTimestamp(
@@ -80,8 +83,8 @@ public class WeatherMapper {
         }
 
         if (response.getWeather() != null && !response.getWeather().isEmpty()) {
-            weather.setWeatherMain(response.getWeather().get(0).getMain());
-            weather.setWeatherDescription(response.getWeather().get(0).getDescription());
+            weather.setWeatherMain(response.getWeather().getFirst().getMain());
+            weather.setWeatherDescription(response.getWeather().getFirst().getDescription());
         }
 
         if (response.getSys() != null) {
@@ -132,8 +135,8 @@ public class WeatherMapper {
                 }
 
                 if (item.getWeather() != null && !item.getWeather().isEmpty()) {
-                    forecast.setWeatherMain(item.getWeather().get(0).getMain());
-                    forecast.setWeatherDescription(item.getWeather().get(0).getDescription());
+                    forecast.setWeatherMain(item.getWeather().getFirst().getMain());
+                    forecast.setWeatherDescription(item.getWeather().getFirst().getDescription());
                 }
 
                 if (item.getRain() != null) {
