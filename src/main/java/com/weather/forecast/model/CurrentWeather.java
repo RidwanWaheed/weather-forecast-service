@@ -37,9 +37,11 @@ public class CurrentWeather {
 
     private  String weatherMain;
 
+    private String weatherDescription;
+
     private LocalDateTime sunset;
 
     private LocalDateTime sunrise;
 
-    private LocalDateTime lastUpdate;
+    private LocalDateTime lastUpdated;
 }
