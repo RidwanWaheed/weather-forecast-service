@@ -1,0 +1,49 @@
+# Build artifacts
+target/
+build/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE files
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
+.project
+.classpath
+.settings/
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+
+# Docker files (avoid recursive copying)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Test files
+src/test/
+
+# Local configuration
+src/main/resources/application-local.properties
+src/main/resources/application-dev.properties
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~

@@ -1,0 +1,55 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: weather-forecast-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/weatherdb
+      - SPRING_DATASOURCE_USERNAME=weather_user
+      - SPRING_DATASOURCE_PASSWORD=weather_password
+      - OPENWEATHERMAP_API_KEY=${OPENWEATHERMAP_API_KEY:-6d0423d1839c9e30fab36f5f143cf76c}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - weather-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  db:
+    image: postgres:15-alpine
+    container_name: weather-forecast-db
+    environment:
+      - POSTGRES_DB=weatherdb
+      - POSTGRES_USER=weather_user
+      - POSTGRES_PASSWORD=weather_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    restart: unless-stopped
+    networks:
+      - weather-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U weather_user -d weatherdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  weather-network:
+    driver: bridge

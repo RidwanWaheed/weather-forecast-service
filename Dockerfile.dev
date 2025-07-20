@@ -1,0 +1,27 @@
+# Development Dockerfile with hot reloading
+FROM eclipse-temurin:21-jdk-alpine
+
+WORKDIR /app
+
+# Install wget for health checks
+RUN apk add --no-cache wget
+
+# Copy Maven wrapper
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+
+# Download dependencies
+RUN ./mvnw dependency:go-offline -B
+
+# Expose ports
+EXPOSE 8080 5005
+
+# Create volume mount point
+VOLUME /app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+# Run with Spring Boot DevTools for hot reloading
+CMD ["./mvnw", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]

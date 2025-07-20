@@ -1,0 +1,58 @@
+services:
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: weather-forecast-app-dev
+    ports:
+      - "8080:8080"
+      - "5005:5005"  # Debug port
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker,dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db-dev:5432/weatherdb
+      - SPRING_DATASOURCE_USERNAME=weather_user
+      - SPRING_DATASOURCE_PASSWORD=weather_password
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+      - OPENWEATHERMAP_API_KEY=${OPENWEATHERMAP_API_KEY:-6d0423d1839c9e30fab36f5f143cf76c}
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    volumes:
+      - .:/app:delegated
+      - maven_cache:/root/.m2
+    depends_on:
+      db-dev:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - weather-network-dev
+    working_dir: /app
+
+  db-dev:
+    image: postgres:15-alpine
+    container_name: weather-forecast-db-dev
+    environment:
+      - POSTGRES_DB=weatherdb
+      - POSTGRES_USER=weather_user
+      - POSTGRES_PASSWORD=weather_password
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    restart: unless-stopped
+    networks:
+      - weather-network-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U weather_user -d weatherdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data_dev:
+    driver: local
+  maven_cache:
+    driver: local
+
+networks:
+  weather-network-dev:
+    driver: bridge
