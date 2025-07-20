@@ -152,7 +152,16 @@ class WeatherServiceImplTest {
     @Test
     void getForecast_WhenFreshDataExists_ShouldReturnCachedData() {
         // Given
-        List<Forecast> testForecasts = Arrays.asList(new Forecast(), new Forecast());
+        Forecast forecast1 = new Forecast();
+        forecast1.setForecastDate(LocalDateTime.now().plusDays(1)); // FIXED: Set proper date
+        forecast1.setTemperature(22.0);
+
+        Forecast forecast2 = new Forecast();
+        forecast2.setForecastDate(LocalDateTime.now().plusDays(2)); // FIXED: Set proper date
+        forecast2.setTemperature(25.0);
+
+        List<Forecast> testForecasts = Arrays.asList(forecast1, forecast2);
+
         ForecastResponse testForecastResponse = ForecastResponse.builder()
                 .city("London")
                 .country("GB")

@@ -6,15 +6,19 @@ import com.weather.forecast.exception.WeatherApiException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class OpenWeatherMapClientTest {
@@ -124,16 +128,15 @@ class OpenWeatherMapClientTest {
         // When
         openWeatherMapClient.getCurrentWeather(cityName);
 
-        // Then
-        verify(restTemplate).getForObject(
-                argThat(url -> {
-                    String urlString = url.toString();
-                    return urlString.contains("/weather") &&
-                            urlString.contains("q=London") &&
-                            urlString.contains("appid=" + apiKey) &&
-                            urlString.contains("units=" + units);
-                }),
-                eq(OpenWeatherMapResponse.class));
+        // Then - Use ArgumentCaptor to capture the actual URL
+        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+        verify(restTemplate).getForObject(urlCaptor.capture(), eq(OpenWeatherMapResponse.class));
+
+        String capturedUrl = urlCaptor.getValue();
+        assertThat(capturedUrl).contains("/weather");
+        assertThat(capturedUrl).contains("q=London");
+        assertThat(capturedUrl).contains("appid=" + apiKey);
+        assertThat(capturedUrl).contains("units=" + units);
     }
 
     @Test
@@ -148,16 +151,15 @@ class OpenWeatherMapClientTest {
         // When
         openWeatherMapClient.getForecast(cityName);
 
-        // Then
-        verify(restTemplate).getForObject(
-                argThat(url -> {
-                    String urlString = url.toString();
-                    return urlString.contains("/forecast") &&
-                            urlString.contains("q=London") &&
-                            urlString.contains("appid=" + apiKey) &&
-                            urlString.contains("units=" + units);
-                }),
-                eq(OpenWeatherMapForecastResponse.class));
+        // Then - Use ArgumentCaptor to capture the actual URL
+        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+        verify(restTemplate).getForObject(urlCaptor.capture(), eq(OpenWeatherMapForecastResponse.class));
+
+        String capturedUrl = urlCaptor.getValue();
+        assertThat(capturedUrl).contains("/forecast");
+        assertThat(capturedUrl).contains("q=London");
+        assertThat(capturedUrl).contains("appid=" + apiKey);
+        assertThat(capturedUrl).contains("units=" + units);
     }
 
     @Test

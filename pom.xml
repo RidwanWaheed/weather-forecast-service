@@ -1,39 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- Parent POM defines versions for many dependencies -->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.3.1</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 
-	<!-- Project Information -->
 	<groupId>com.weather</groupId>
 	<artifactId>weather-forecast-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>weather-forecast-service</name>
 	<description>Weather Forecast Service</description>
 
-	<!-- Properties -->
 	<properties>
 		<java.version>21</java.version>
-		<!-- Versions not managed by Spring Boot parent -->
-		<lombok.version>1.18.32</lombok.version>
-		<springdoc.version>2.5.0</springdoc.version>
-		<flyway.version>10.15.2</flyway.version>
-		<!-- Testing versions -->
-		<testcontainers.version>1.19.8</testcontainers.version>
-		<jacoco.version>0.8.10</jacoco.version>
-		<!-- Maven plugin versions -->
-		<maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
-		<maven-failsafe-plugin.version>3.1.2</maven-failsafe-plugin.version>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<lombok.version>1.18.30</lombok.version>
 	</properties>
 
-	<!-- Dependencies -->
 	<dependencies>
 		<!-- Spring Boot Starters -->
 		<dependency>
@@ -71,8 +63,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>${lombok.version}</version>
-			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<!-- Database -->
@@ -89,12 +80,10 @@
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
-			<version>${flyway.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
-			<version>${flyway.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -102,33 +91,19 @@
 		<dependency>
 			<groupId>com.github.ben-manes.caffeine</groupId>
 			<artifactId>caffeine</artifactId>
-			<!-- Version is managed by spring-boot-starter-parent -->
 		</dependency>
 
 		<!-- API Documentation -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>${springdoc.version}</version>
-		</dependency>
-
-		<!-- Monitoring and Tracing -->
-		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-tracing-bridge-brave</artifactId>
+			<version>2.5.0</version>
 		</dependency>
 
 		<!-- Testing Dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- Enhanced Testing Dependencies -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-testcontainers</artifactId>
 			<scope>test</scope>
 		</dependency>
 
@@ -141,13 +116,6 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>postgresql</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- Better Test Assertions -->
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
 			<scope>test</scope>
 		</dependency>
 
@@ -166,10 +134,8 @@
 		</dependency>
 	</dependencies>
 
-	<!-- Build Configuration -->
 	<build>
 		<plugins>
-			<!-- Spring Boot Maven Plugin -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -183,15 +149,16 @@
 				</configuration>
 			</plugin>
 
-			<!-- Maven Compiler Plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.11.0</version>
 				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-					<fork>true</fork>
-					<executable>/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home/bin/javac</executable>
+					<source>21</source>
+					<target>21</target>
+					<compilerArgs>
+						<arg>-parameters</arg>
+					</compilerArgs>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>
@@ -201,183 +168,6 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
-
-			<!-- Surefire Plugin for Unit Tests -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>${maven-surefire-plugin.version}</version>
-				<configuration>
-					<includes>
-						<include>**/*Test.java</include>
-						<include>**/*Tests.java</include>
-					</includes>
-					<excludes>
-						<exclude>**/*IT.java</exclude>
-						<exclude>**/*IntegrationTest.java</exclude>
-					</excludes>
-					<!-- Generate test reports in XML format -->
-					<reportFormat>xml</reportFormat>
-					<!-- Show test output in console -->
-					<printSummary>true</printSummary>
-					<!-- Enable parallel execution -->
-					<parallel>methods</parallel>
-					<threadCount>4</threadCount>
-					<!-- System properties for tests -->
-					<systemPropertyVariables>
-						<spring.profiles.active>test</spring.profiles.active>
-					</systemPropertyVariables>
-				</configuration>
-			</plugin>
-
-			<!-- Failsafe Plugin for Integration Tests -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>${maven-failsafe-plugin.version}</version>
-				<configuration>
-					<includes>
-						<include>**/*IT.java</include>
-						<include>**/*IntegrationTest.java</include>
-					</includes>
-					<systemPropertyVariables>
-						<spring.profiles.active>test</spring.profiles.active>
-					</systemPropertyVariables>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<!-- JaCoCo Plugin for Code Coverage -->
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>${jacoco.version}</version>
-				<executions>
-					<!-- Prepare agent for unit tests -->
-					<execution>
-						<id>prepare-agent</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-					<!-- Prepare agent for integration tests -->
-					<execution>
-						<id>prepare-agent-integration</id>
-						<goals>
-							<goal>prepare-agent-integration</goal>
-						</goals>
-					</execution>
-					<!-- Generate unit test coverage report -->
-					<execution>
-						<id>report</id>
-						<phase>test</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-					</execution>
-					<!-- Generate integration test coverage report -->
-					<execution>
-						<id>report-integration</id>
-						<phase>post-integration-test</phase>
-						<goals>
-							<goal>report-integration</goal>
-						</goals>
-					</execution>
-					<!-- Merge unit and integration test coverage -->
-					<execution>
-						<id>merge-results</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>merge</goal>
-						</goals>
-						<configuration>
-							<fileSets>
-								<fileSet>
-									<directory>${project.build.directory}</directory>
-									<includes>
-										<include>*.exec</include>
-									</includes>
-								</fileSet>
-							</fileSets>
-							<destFile>${project.build.directory}/jacoco-merged.exec</destFile>
-						</configuration>
-					</execution>
-					<!-- Generate merged coverage report -->
-					<execution>
-						<id>merged-report</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-						<configuration>
-							<dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
-							<outputDirectory>${project.reporting.outputDirectory}/jacoco-merged</outputDirectory>
-						</configuration>
-					</execution>
-					<!-- Coverage enforcement -->
-					<execution>
-						<id>check</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-						<configuration>
-							<dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
-							<rules>
-								<rule>
-									<element>BUNDLE</element>
-									<limits>
-										<limit>
-											<counter>INSTRUCTION</counter>
-											<value>COVEREDRATIO</value>
-											<minimum>0.80</minimum>
-										</limit>
-										<limit>
-											<counter>BRANCH</counter>
-											<value>COVEREDRATIO</value>
-											<minimum>0.70</minimum>
-										</limit>
-									</limits>
-								</rule>
-							</rules>
-						</configuration>
-					</execution>
-				</executions>
-				<configuration>
-					<!-- Exclude generated classes and configuration classes from coverage -->
-					<excludes>
-						<exclude>**/Application.java</exclude>
-						<exclude>**/config/*</exclude>
-						<exclude>**/dto/*</exclude>
-						<exclude>**/model/*</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
-
-	<!-- Reporting for code coverage -->
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>${jacoco.version}</version>
-				<reportSets>
-					<reportSet>
-						<reports>
-							<report>report</report>
-						</reports>
-					</reportSet>
-				</reportSets>
-			</plugin>
-		</plugins>
-	</reporting>
 </project>

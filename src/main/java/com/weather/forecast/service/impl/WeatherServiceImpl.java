@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Use the Spring annotation
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,13 +46,13 @@ public class WeatherServiceImpl implements WeatherService {
 
     @Override
     @Cacheable(value = "currentWeather", key = "#cityName.toLowerCase()")
-    @Transactional
     public WeatherResponse getCurrentWeather(String cityName) {
         try {
             City city = cityService.findOrCreateCity(cityName);
             cityService.incrementSearchCount(city);
 
-            Optional<CurrentWeather> existingWeather = currentWeatherRepository.findById(city.getId());
+            // FIXED: Changed from findById to findByCityId
+            Optional<CurrentWeather> existingWeather = currentWeatherRepository.findByCityId(city.getId());
 
             if (existingWeather.isPresent() && weatherMapper.isDataFresh(existingWeather.get().getLastUpdated())) {
                 return weatherMapper.mapToWeatherResponse(existingWeather.get());
@@ -69,8 +69,8 @@ public class WeatherServiceImpl implements WeatherService {
             logger.error("Error fetching current weather for {}: {}", cityName, e.getMessage());
 
             return cityService.findByName(cityName)
-                    // Use a lambda to extract the city's ID and pass it to findById
-                    .flatMap(city -> currentWeatherRepository.findById(city.getId()))
+                    // FIXED: Changed from findById to findByCityId
+                    .flatMap(city -> currentWeatherRepository.findByCityId(city.getId()))
                     .map(weatherMapper::mapToWeatherResponse)
                     .orElseThrow(() -> e); // Rethrow original exception if no stale data exists
         }
@@ -78,7 +78,6 @@ public class WeatherServiceImpl implements WeatherService {
 
     @Override
     @Cacheable(value = "forecast", key = "#cityName.toLowerCase()")
-    @Transactional
     public ForecastResponse getForecast(String cityName) {
         try {
             City city = cityService.findOrCreateCity(cityName);
@@ -114,7 +113,6 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     @Override
-    // IMPROVEMENT: Added @Transactional for data consistency.
     @Transactional
     public void refreshWeatherData(City city) {
         try {
