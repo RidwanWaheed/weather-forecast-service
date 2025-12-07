@@ -2,124 +2,155 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout :: layout(~{::title}, ~{::section})}">
 <head>
-  <title th:text="'Weather in ' + ${weather.city}">Weather Forecast</title>
+    <title th:text="'Weather in ' + ${#strings.capitalize(weather.city)}">Weather Forecast</title>
 </head>
 <body>
 <section>
-  <div class="mb-4">
-    <a th:href="@{/}" class="btn btn-outline-secondary">&laquo; Back to Home</a>
-  </div>
+    <!-- Weather Grid with Back Button -->
+    <div class="weather-page-container">
+        <!-- Back Button - aligned with grid -->
+        <a th:href="@{/}" class="back-btn">
+            <i class="bi bi-arrow-left"></i>Back to Home
+        </a>
 
-  <div class="row">
-    <!-- Current Weather Card -->
-    <div class="col-md-6">
-      <div class="card shadow mb-4">
-        <div class="card-header bg-primary text-white">
-          <h3 class="card-title mb-0">
-            Current Weather in
-            <span th:text="${weather.city}">City</span>
-            <small th:if="${weather.country != null}" th:text="'(' + ${weather.country} + ')'"></small>
-          </h3>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="weather-icon text-center mb-3">
-                <!-- Weather icon would go here -->
-                <h2 th:text="${weather.conditions}">Sunny</h2>
-              </div>
-              <h3 class="text-center">
-                <span th:text="${#numbers.formatDecimal(weather.temperature, 0, 1)}">20.0</span>°C
-              </h3>
-              <p class="text-center" th:text="${weather.description}">Clear sky</p>
-            </div>
-            <div class="col-md-6">
-              <ul class="list-group">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  Humidity
-                  <span th:text="${weather.humidity} + '%'">70%</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  Wind
-                  <span th:text="${#numbers.formatDecimal(weather.windSpeed, 0, 1)} + ' m/s'">5.0 m/s</span>
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                  Pressure
-                  <span th:text="${weather.pressure} + ' hPa'">1013 hPa</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div class="row mt-3">
-            <div class="col-md-6">
-              <p>
-                <strong>Sunrise:</strong>
-                <span th:text="${#temporals.format(weather.sunrise, 'HH:mm')}">06:30</span>
-              </p>
-            </div>
-            <div class="col-md-6">
-              <p>
-                <strong>Sunset:</strong>
-                <span th:text="${#temporals.format(weather.sunset, 'HH:mm')}">19:45</span>
-              </p>
-            </div>
-            <div class="col-12">
-              <p class="text-muted small">
-                Updated:
-                <span th:text="${#temporals.format(weather.timestamp, 'yyyy-MM-dd HH:mm')}">2023-01-01 12:00</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        <!-- Weather Grid -->
+        <div class="weather-grid">
+            <!-- Current Weather Card -->
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <h4>
+                        <i class="bi bi-geo-alt-fill me-2"></i>
+                        <span th:text="${#strings.capitalize(weather.city)}">City</span><span
+                            th:if="${weather.country != null}"
+                            th:text="', ' + ${weather.country}"
+                            style="font-weight: 400; opacity: 0.9;"></span>
+                    </h4>
+                </div>
+                <div class="glass-card-body">
+                    <div class="weather-display">
+                        <!-- Weather Icon based on conditions -->
+                        <div class="weather-icon-large">
+                            <i th:class="${weather.conditions.name().contains('CLEAR') ? 'bi bi-sun-fill' :
+                                           weather.conditions.name().contains('CLOUD') ? 'bi bi-cloud-fill' :
+                                           weather.conditions.name().contains('RAIN') ? 'bi bi-cloud-rain-fill' :
+                                           weather.conditions.name().contains('DRIZZLE') ? 'bi bi-cloud-drizzle-fill' :
+                                           weather.conditions.name().contains('THUNDER') ? 'bi bi-cloud-lightning-fill' :
+                                           weather.conditions.name().contains('SNOW') ? 'bi bi-snow' :
+                                           weather.conditions.name().contains('MIST') or weather.conditions.name().contains('FOG') ? 'bi bi-cloud-fog-fill' :
+                                           'bi bi-cloud-sun-fill'}"></i>
+                        </div>
+                        <div class="temperature-display">
+                            <span th:text="${#numbers.formatDecimal(weather.temperature, 0, 0)}">20</span><span class="unit">&deg;C</span>
+                        </div>
+                        <div class="weather-condition" th:text="${weather.description}">Clear sky</div>
+                    </div>
 
-    <!-- Forecast Card -->
-    <div class="col-md-6">
-      <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-          <h3 class="card-title mb-0">Forecast</h3>
-        </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead>
-              <tr>
-                <th>Date</th>
-                <th>Temp</th>
-                <th>Conditions</th>
-                <th>Precipitation</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr th:each="item : ${forecast.forecasts}">
-                <td th:text="${#temporals.format(item.date, 'MM-dd HH:mm')}">01-01 12:00</td>
-                <td th:text="${#numbers.formatDecimal(item.temperature, 0, 1)} + '°C'">20.0°C</td>
-                <td th:text="${item.conditions}">Sunny</td>
-                <td th:text="${item.probability != null ? #numbers.formatPercent(item.probability, 0, 0) : '0%'}">20%</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+                    <!-- Weather Stats -->
+                    <div class="weather-stats">
+                        <div class="stat-item">
+                            <div class="stat-icon"><i class="bi bi-droplet-fill"></i></div>
+                            <div class="stat-value" th:text="${weather.humidity} + '%'">70%</div>
+                            <div class="stat-label">Humidity</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-icon"><i class="bi bi-wind"></i></div>
+                            <div class="stat-value" th:text="${#numbers.formatDecimal(weather.windSpeed, 0, 1)} + ' m/s'">5.0</div>
+                            <div class="stat-label">Wind</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-icon"><i class="bi bi-speedometer2"></i></div>
+                            <div class="stat-value" th:text="${weather.pressure}">1013</div>
+                            <div class="stat-label">hPa</div>
+                        </div>
+                    </div>
 
-  <!-- Recent Searches -->
-  <div class="mt-5" th:if="${not #lists.isEmpty(recentCities)}">
-    <h4>Recently Searched Cities</h4>
-    <div class="row row-cols-1 row-cols-md-5 g-4">
-      <div class="col" th:each="city : ${recentCities}">
-        <div class="card h-100">
-          <div class="card-body p-3">
-            <h6 class="card-title" th:text="${city.name}">City Name</h6>
-            <a th:href="@{/weather(city=${city.name})}" class="btn btn-sm btn-outline-primary">View</a>
-          </div>
+                    <!-- Sunrise/Sunset -->
+                    <div class="sun-times">
+                        <div class="sun-time sunrise">
+                            <i class="bi bi-sunrise-fill"></i>
+                            <span class="label">Sunrise</span>
+                            <span class="time" th:text="${#temporals.format(weather.sunrise, 'h:mm a')}">6:30 AM</span>
+                        </div>
+                        <div class="sun-time sunset">
+                            <i class="bi bi-sunset-fill"></i>
+                            <span class="label">Sunset</span>
+                            <span class="time" th:text="${#temporals.format(weather.sunset, 'h:mm a')}">7:45 PM</span>
+                        </div>
+                    </div>
+
+                    <!-- Updated Time -->
+                    <div class="updated-time">
+                        <i class="bi bi-clock me-1"></i>
+                        Updated: <span th:text="${#temporals.format(weather.timestamp, 'MMM d, h:mm a')}">Jan 1, 12:00 PM</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forecast Card -->
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <h4><i class="bi bi-clock-history me-2"></i>Upcoming Forecast</h4>
+                </div>
+                <div class="glass-card-body">
+                    <div class="forecast-container">
+                        <!--/*
+                            Smart date display logic:
+                            - If same day as today: show "Today" + time
+                            - If tomorrow: show "Tomorrow" + time
+                            - Otherwise: show day name + time
+                        */-->
+                        <div th:each="item, iterStat : ${forecast.forecasts}" class="forecast-item">
+                            <!-- Date with smart formatting -->
+                            <div class="forecast-date">
+                                <span class="day"
+                                      th:with="today=${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')},
+                                               itemDay=${#temporals.format(item.date, 'yyyy-MM-dd')},
+                                               tomorrow=${#temporals.format(#temporals.createNow().plusDays(1), 'yyyy-MM-dd')}"
+                                      th:text="${itemDay == today ? 'Today' : (itemDay == tomorrow ? 'Tomorrow' : #temporals.format(item.date, 'EEE'))}">Mon</span>
+                                <span class="time"
+                                      th:text="${#temporals.format(item.date, 'h:mm a')}">12:00 PM</span>
+                            </div>
+
+                            <!-- Weather Icon -->
+                            <div class="forecast-icon">
+                                <i th:class="${item.conditions.name().contains('CLEAR') ? 'bi bi-sun-fill text-warning' :
+                                               item.conditions.name().contains('CLOUD') ? 'bi bi-cloud-fill text-secondary' :
+                                               item.conditions.name().contains('RAIN') ? 'bi bi-cloud-rain-fill text-primary' :
+                                               item.conditions.name().contains('DRIZZLE') ? 'bi bi-cloud-drizzle-fill text-info' :
+                                               item.conditions.name().contains('THUNDER') ? 'bi bi-cloud-lightning-fill text-warning' :
+                                               item.conditions.name().contains('SNOW') ? 'bi bi-snow text-info' :
+                                               'bi bi-cloud-sun-fill text-secondary'}"></i>
+                            </div>
+
+                            <!-- Temperature -->
+                            <div class="forecast-temp">
+                                <span th:text="${#numbers.formatDecimal(item.temperature, 0, 0)}">20</span>&deg;C
+                            </div>
+
+                            <!-- Precipitation -->
+                            <div class="forecast-precipitation">
+                                <i class="bi bi-droplet"></i>
+                                <span th:text="${item.probability != null ? #numbers.formatPercent(item.probability, 0, 0) : '0%'}">20%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <!-- Recent Searches as Pills -->
+        <div class="recent-searches-section" th:if="${not #lists.isEmpty(recentCities)}">
+            <p class="section-title">Recently Searched</p>
+            <div class="city-pills">
+                <a th:each="city : ${recentCities}"
+                   th:href="@{/weather(city=${city.name})}"
+                   class="city-pill">
+                    <i class="bi bi-geo-alt"></i>
+                    <span th:text="${#strings.capitalize(city.name)}">City Name</span>
+                </a>
+            </div>
+        </div>
     </div>
-  </div>
 </section>
 </body>
 </html>

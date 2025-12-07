@@ -2,44 +2,46 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:replace="~{layout :: layout(~{::title}, ~{::section})}">
 <head>
-  <title>Weather Forecast - Home</title>
+    <title>Weather Forecast - Home</title>
 </head>
 <body>
 <section>
-  <div class="row">
-    <div class="col-md-6 mx-auto">
-      <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-          <h3 class="card-title mb-0">Check Weather</h3>
-        </div>
-        <div class="card-body">
-          <form th:action="@{/search}" method="post">
-            <div class="mb-3">
-              <label for="city" class="form-label">Enter City Name</label>
-              <input type="text" class="form-control" id="city" name="city" required
-                     placeholder="e.g., London, New York, Tokyo">
+    <div class="content-center">
+        <!-- Search Card -->
+        <div class="glass-card" style="max-width: 500px; width: 100%;">
+            <div class="glass-card-header">
+                <h3><i class="bi bi-search me-2"></i>Check Weather</h3>
             </div>
-            <button type="submit" class="btn btn-primary">Get Weather</button>
-          </form>
+            <div class="search-form">
+                <form th:action="@{/search}" method="post">
+                    <div class="search-input-group">
+                        <input type="text"
+                               class="search-input"
+                               id="city"
+                               name="city"
+                               required
+                               placeholder="Enter city name (e.g., London, Tokyo)">
+                        <button type="submit" class="search-btn">
+                            <i class="bi bi-cloud-sun"></i>Get Weather
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="mt-5" th:if="${not #lists.isEmpty(recentCities)}">
-    <h4>Recently Searched Cities</h4>
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-      <div class="col" th:each="city : ${recentCities}">
-        <div class="card h-100">
-          <div class="card-body">
-            <h5 class="card-title" th:text="${city.name}">City Name</h5>
-            <p class="card-text" th:if="${city.country != null}" th:text="${city.country}">Country</p>
-            <a th:href="@{/weather(city=${city.name})}" class="btn btn-sm btn-outline-primary">View Weather</a>
-          </div>
+        <!-- Recently Searched Cities -->
+        <div class="mt-glass" th:if="${not #lists.isEmpty(recentCities)}" style="max-width: 600px; width: 100%;">
+            <p class="section-title">Recently Searched</p>
+            <div class="city-pills">
+                <a th:each="city : ${recentCities}"
+                   th:href="@{/weather(city=${city.name})}"
+                   class="city-pill">
+                    <i class="bi bi-geo-alt"></i>
+                    <span th:text="${city.name}">City Name</span>
+                </a>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </section>
 </body>
 </html>
