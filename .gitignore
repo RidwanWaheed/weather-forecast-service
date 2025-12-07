@@ -38,3 +38,8 @@ src/main/resources/application-local.properties
 ### Logs ###
 logs/
 *.log
+
+### Project Documentation ###
+CLAUDE.md
+LEARNING_NOTES.md
+REFACTORING.md
