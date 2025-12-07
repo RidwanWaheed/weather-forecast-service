@@ -1,27 +1,22 @@
 package com.weather.forecast.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.weather.forecast.model.WeatherCondition;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.Instant;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class WeatherResponse {
-    private String city;
-    private String country;
-    private LocalDateTime timestamp;
-    private Double temperature;
-    private Integer humidity;
-    private Double windSpeed;
-    private Integer windDirection;
-    private Integer pressure;
-    private String conditions;
-    private String description;
-    private LocalDateTime sunrise;
-    private LocalDateTime sunset;
+public record WeatherResponse(
+        String city,
+        String country,
+        Instant timestamp,
+        BigDecimal temperature,
+        Integer humidity,
+        BigDecimal windSpeed,
+        Integer windDirection,
+        Integer pressure,
+        WeatherCondition conditions,
+        String description,
+        Instant sunrise,
+        Instant sunset
+) {
 }
