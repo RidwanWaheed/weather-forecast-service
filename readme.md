@@ -1,130 +1,84 @@
 # Weather Forecast Service
 
-A Spring Boot web application that provides weather forecasts for cities using the OpenWeatherMap API.
+A Spring Boot application that provides current weather and 5-day forecasts via REST API and web interface, powered by OpenWeatherMap.
 
-## Features
+## Tech Stack
 
-- Search weather by city name
-- View current weather conditions
-- See 5-day weather forecast
-- Web dashboard and REST API
-- Recently searched cities tracking
+<p>
+  <img src="https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white" alt="Java 21" />
+  <img src="https://img.shields.io/badge/Spring_Boot-3.3-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot" />
+  <img src="https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Docker-24-2496ED?logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Maven-3.9-C71A36?logo=apachemaven&logoColor=white" alt="Maven" />
+  <img src="https://img.shields.io/badge/Thymeleaf-3-005F0F?logo=thymeleaf&logoColor=white" alt="Thymeleaf" />
+</p>
 
-## Technologies
+## Architecture
 
-- Java 21
-- Spring Boot 3
-- Spring Data JPA
-- PostgreSQL
-- Thymeleaf
-- Docker
-- Maven
+```mermaid
+flowchart TB
+    subgraph Client
+        Browser[Web Browser]
+        API[API Client]
+    end
 
-## Quick Start
+    subgraph "Spring Boot"
+        WC[WebController]
+        AC[WeatherApiController]
+        WS[WeatherService]
+        Cache[(Caffeine Cache)]
+        OWM[OpenWeatherMapClient]
+    end
 
-### Using Docker (Recommended)
+    subgraph Data
+        DB[(PostgreSQL)]
+    end
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/weather-forecast-service.git
-   cd weather-forecast-service
-   ```
+    subgraph External
+        Weather[OpenWeatherMap API]
+    end
 
-2. Run with Docker:
-   ```bash
-   make up
-   ```
+    Browser --> WC
+    API --> AC
+    WC --> WS
+    AC --> WS
+    WS <--> Cache
+    WS <--> DB
+    WS --> OWM
+    OWM --> Weather
+```
 
-3. Access the application:
-   - Web Interface: http://localhost:8080
-   - API Documentation: http://localhost:8080/swagger-ui.html
+## How to Run
 
-### Manual Setup
+```bash
+# Clone and configure
+git clone https://github.com/RidwanWaheed/weather-forecast-service.git
+cd weather-forecast-service
+cp .env.example .env
+# Edit .env and add your OpenWeatherMap API key
 
-1. Install PostgreSQL and create database:
-   ```sql
-   CREATE DATABASE weatherdb;
-   CREATE USER weather_user WITH PASSWORD 'your_password';
-   GRANT ALL PRIVILEGES ON DATABASE weatherdb TO weather_user;
-   ```
+# Run with Docker
+make up
 
-2. Update `application.properties` with your database credentials
+# Or run locally (requires PostgreSQL)
+./mvnw spring-boot:run
+```
 
-3. Run the application:
-   ```bash
-   ./mvnw spring-boot:run
-   ```
+Access: http://localhost:8080 | API Docs: http://localhost:8080/swagger-ui.html
 
 ## API Endpoints
 
-### Current Weather
-```
-GET /api/weather/current?city=London
-```
-
-### Forecast
-```
-GET /api/weather/forecast?city=London
-```
-
-## Project Structure
-
-```
-src/
-├── main/java/com/weather/forecast/
-│   ├── controller/          # REST controllers and web controllers
-│   ├── service/             # Business logic
-│   ├── repository/          # Data access layer
-│   ├── model/               # JPA entities
-│   ├── dto/                 # Data transfer objects
-│   └── config/              # Configuration classes
-└── main/resources/
-    ├── templates/           # Thymeleaf templates
-    ├── static/              # CSS, JS files
-    └── db/migration/        # Database migration scripts
-```
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `OPENWEATHERMAP_API_KEY` | OpenWeatherMap API key | Test key included |
-| `SPRING_DATASOURCE_URL` | Database URL | `jdbc:postgresql://localhost:5432/weatherdb` |
-| `SPRING_DATASOURCE_USERNAME` | Database username | `weather_user` |
-| `SPRING_DATASOURCE_PASSWORD` | Database password | Required |
-
-## Development
-
-### Requirements
-- Java 21
-- Maven 3.6+
-- PostgreSQL 12+
-
-### Running Tests
-```bash
-./mvnw test
-```
-
-### Building
-```bash
-./mvnw clean package
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/weather/current?city={name}` | Current weather |
+| GET | `/api/weather/forecast?city={name}` | 5-day forecast |
 
 ## Make Commands
 
 ```bash
-make build   # Build the application
-make test    # Run tests
-make run     # Run locally
-make clean   # Clean everything
-
 make up      # Start containers
 make down    # Stop containers
-make dev     # Start dev containers
+make dev     # Development mode with hot reload
+make test    # Run tests
 make logs    # View logs
-make db      # Database shell
 ```
-
-## License
-
-This project is for educational purposes.
