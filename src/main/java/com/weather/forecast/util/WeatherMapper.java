@@ -7,17 +7,18 @@ import com.weather.forecast.dto.WeatherResponse;
 import com.weather.forecast.model.City;
 import com.weather.forecast.model.CurrentWeather;
 import com.weather.forecast.model.Forecast;
+import com.weather.forecast.model.WeatherCondition;
 import com.weather.forecast.repository.CurrentWeatherRepository;
 import com.weather.forecast.service.CityService;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/** Converts between OpenWeatherMap API responses and domain entities. */
 @Component
 public class WeatherMapper {
 
@@ -29,32 +30,32 @@ public class WeatherMapper {
         this.currentWeatherRepository = currentWeatherRepository;
     }
 
-    public boolean isDataFresh(LocalDateTime timestamp) {
+    /** @return true if timestamp is within the last 30 minutes */
+    public boolean isDataFresh(Instant timestamp) {
         if (timestamp == null) {
             return false;
         }
-        // Data is fresh if it's less than 30 minutes old
-        return timestamp.isAfter(LocalDateTime.now().minusMinutes(30));
+        return timestamp.isAfter(Instant.now().minus(30, ChronoUnit.MINUTES));
     }
 
     public void updateCityFromResponse(City city, OpenWeatherMapResponse response) {
-        if (response.getSys() != null) {
-            city.setCountry(response.getSys().getCountry());
+        if (response.sys() != null) {
+            city.setCountry(response.sys().country());
         }
-        if (response.getCoord() != null) {
-            city.setLatitude(response.getCoord().getLat());
-            city.setLongitude(response.getCoord().getLon());
+        if (response.coord() != null) {
+            city.setLatitude(response.coord().lat());
+            city.setLongitude(response.coord().lon());
         }
         cityService.saveCity(city);
     }
 
     public void updateCityFromResponse(City city, OpenWeatherMapForecastResponse response) {
-        if (response.getCity() != null) {
-            city.setCountry(response.getCity().getCountry());
+        if (response.city() != null) {
+            city.setCountry(response.city().country());
 
-            if (response.getCity().getCoord() != null) {
-                city.setLatitude(response.getCity().getCoord().getLat());
-                city.setLongitude(response.getCity().getCoord().getLon());
+            if (response.city().coord() != null) {
+                city.setLatitude(response.city().coord().lat());
+                city.setLongitude(response.city().coord().lon());
             }
         }
         cityService.saveCity(city);
@@ -64,45 +65,30 @@ public class WeatherMapper {
         CurrentWeather weather = currentWeatherRepository.findByCityId(city.getId()).orElse(new CurrentWeather());
 
         weather.setCity(city);
-        weather.setTimestamp(
-                LocalDateTime.ofInstant(
-                        Instant.ofEpochSecond(response.getDt()),
-                        ZoneId.systemDefault()
-                )
-        );
+        weather.setTimestamp(Instant.ofEpochSecond(response.dt()));
 
-        if (response.getMain() != null) {
-            weather.setTemperature(response.getMain().getTemp());
-            weather.setHumidity(response.getMain().getHumidity());
-            weather.setPressure(response.getMain().getPressure());
+        if (response.main() != null) {
+            weather.setTemperature(toBigDecimal(response.main().temp()));
+            weather.setHumidity(response.main().humidity());
+            weather.setPressure(response.main().pressure());
         }
 
-        if (response.getWind() != null) {
-            weather.setWindSpeed(response.getWind().getSpeed());
-            weather.setWindDirection(response.getWind().getDeg());
+        if (response.wind() != null) {
+            weather.setWindSpeed(toBigDecimal(response.wind().speed()));
+            weather.setWindDirection(response.wind().deg());
         }
 
-        if (response.getWeather() != null && !response.getWeather().isEmpty()) {
-            weather.setWeatherMain(response.getWeather().getFirst().getMain());
-            weather.setWeatherDescription(response.getWeather().getFirst().getDescription());
+        if (response.weather() != null && !response.weather().isEmpty()) {
+            weather.setWeatherMain(WeatherCondition.fromString(response.weather().getFirst().main()));
+            weather.setWeatherDescription(response.weather().getFirst().description());
         }
 
-        if (response.getSys() != null) {
-            weather.setSunrise(
-                    LocalDateTime.ofInstant(
-                            Instant.ofEpochSecond(response.getSys().getSunrise()),
-                            ZoneId.systemDefault()
-                    )
-            );
-            weather.setSunset(
-                    LocalDateTime.ofInstant(
-                            Instant.ofEpochSecond(response.getSys().getSunset()),
-                            ZoneId.systemDefault()
-                    )
-            );
+        if (response.sys() != null) {
+            weather.setSunrise(Instant.ofEpochSecond(response.sys().sunrise()));
+            weather.setSunset(Instant.ofEpochSecond(response.sys().sunset()));
         }
 
-        weather.setLastUpdated(LocalDateTime.now());
+        weather.setLastUpdated(Instant.now());
 
         return weather;
     }
@@ -110,40 +96,34 @@ public class WeatherMapper {
     public List<Forecast> mapToForecasts(City city, OpenWeatherMapForecastResponse response) {
         List<Forecast> forecasts = new ArrayList<>();
 
-        if (response.getList() != null) {
-            for (OpenWeatherMapForecastResponse.ForecastItem item : response.getList()) {
+        if (response.list() != null) {
+            for (OpenWeatherMapForecastResponse.ForecastItem item : response.list()) {
                 Forecast forecast = new Forecast();
                 forecast.setCity(city);
 
-                // Parse datetime
-                forecast.setForecastDate(
-                        LocalDateTime.ofInstant(
-                                Instant.ofEpochSecond(item.getDt()),
-                                ZoneId.systemDefault()
-                        )
-                );
+                forecast.setForecastDate(Instant.ofEpochSecond(item.dt()));
 
-                if (item.getMain() != null) {
-                    forecast.setTemperature(item.getMain().getTemp());
-                    forecast.setHumidity(item.getMain().getHumidity());
-                    forecast.setPressure(item.getMain().getPressure());
+                if (item.main() != null) {
+                    forecast.setTemperature(toBigDecimal(item.main().temp()));
+                    forecast.setHumidity(item.main().humidity());
+                    forecast.setPressure(item.main().pressure());
                 }
 
-                if (item.getWind() != null) {
-                    forecast.setWindSpeed(item.getWind().getSpeed());
-                    forecast.setWindDirection(item.getWind().getDeg());
+                if (item.wind() != null) {
+                    forecast.setWindSpeed(toBigDecimal(item.wind().speed()));
+                    forecast.setWindDirection(item.wind().deg());
                 }
 
-                if (item.getWeather() != null && !item.getWeather().isEmpty()) {
-                    forecast.setWeatherMain(item.getWeather().getFirst().getMain());
-                    forecast.setWeatherDescription(item.getWeather().getFirst().getDescription());
+                if (item.weather() != null && !item.weather().isEmpty()) {
+                    forecast.setWeatherMain(WeatherCondition.fromString(item.weather().getFirst().main()));
+                    forecast.setWeatherDescription(item.weather().getFirst().description());
                 }
 
-                if (item.getRain() != null) {
-                    forecast.setRainVolume(item.getRain().getThreeHour());
+                if (item.rain() != null) {
+                    forecast.setRainVolume(toBigDecimal(item.rain().threeHour()));
                 }
 
-                forecast.setProbability(item.getPop());
+                forecast.setProbability(toBigDecimal(item.pop()));
 
                 forecasts.add(forecast);
             }
@@ -153,40 +133,44 @@ public class WeatherMapper {
     }
 
     public WeatherResponse mapToWeatherResponse(CurrentWeather weather) {
-        return WeatherResponse.builder()
-                .city(weather.getCity().getName())
-                .country(weather.getCity().getCountry())
-                .timestamp(weather.getTimestamp())
-                .temperature(weather.getTemperature())
-                .humidity(weather.getHumidity())
-                .windSpeed(weather.getWindSpeed())
-                .windDirection(weather.getWindDirection())
-                .pressure(weather.getPressure())
-                .conditions(weather.getWeatherMain())
-                .description(weather.getWeatherDescription())
-                .sunrise(weather.getSunrise())
-                .sunset(weather.getSunset())
-                .build();
+        return new WeatherResponse(
+                weather.getCity().getName(),
+                weather.getCity().getCountry(),
+                weather.getTimestamp(),
+                weather.getTemperature(),
+                weather.getHumidity(),
+                weather.getWindSpeed(),
+                weather.getWindDirection(),
+                weather.getPressure(),
+                weather.getWeatherMain(),
+                weather.getWeatherDescription(),
+                weather.getSunrise(),
+                weather.getSunset()
+        );
     }
 
     public ForecastResponse mapToForecastResponse(City city, List<Forecast> forecasts) {
         List<ForecastResponse.ForecastItem> forecastItems = forecasts.stream()
-                .map(forecast -> ForecastResponse.ForecastItem.builder()
-                        .date(forecast.getForecastDate())
-                        .temperature(forecast.getTemperature())
-                        .humidity(forecast.getHumidity())
-                        .windSpeed(forecast.getWindSpeed())
-                        .conditions(forecast.getWeatherMain())
-                        .description(forecast.getWeatherDescription())
-                        .rainVolume(forecast.getRainVolume())
-                        .probability(forecast.getProbability())
-                        .build())
-                .collect(Collectors.toList());
+                .map(forecast -> new ForecastResponse.ForecastItem(
+                        forecast.getForecastDate(),
+                        forecast.getTemperature(),
+                        forecast.getHumidity(),
+                        forecast.getWindSpeed(),
+                        forecast.getWeatherMain(),
+                        forecast.getWeatherDescription(),
+                        forecast.getRainVolume(),
+                        forecast.getProbability()
+                ))
+                .toList();
 
-        return ForecastResponse.builder()
-                .city(city.getName())
-                .country(city.getCountry())
-                .forecasts(forecastItems)
-                .build();
+        return new ForecastResponse(
+                city.getName(),
+                city.getCountry(),
+                forecastItems
+        );
+    }
+
+    private BigDecimal toBigDecimal(Double value) {
+        return value != null ? BigDecimal.valueOf(value) : null;
     }
 }

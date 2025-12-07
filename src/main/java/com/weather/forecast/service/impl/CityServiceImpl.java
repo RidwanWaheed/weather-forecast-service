@@ -9,7 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +30,7 @@ public class CityServiceImpl implements CityService {
                     City newCity = new City();
                     newCity.setName(cityName);
                     newCity.setSearchCount(1);
-                    newCity.setLastSearched(LocalDateTime.now());
+                    newCity.setLastSearched(Instant.now());
                     return cityRepository.save(newCity);
                 });
     }

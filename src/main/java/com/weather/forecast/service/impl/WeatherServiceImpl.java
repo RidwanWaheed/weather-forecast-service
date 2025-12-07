@@ -21,7 +21,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,7 +52,6 @@ public class WeatherServiceImpl implements WeatherService {
             City city = cityService.findOrCreateCity(cityName);
             cityService.incrementSearchCount(city);
 
-            // FIXED: Changed from findById to findByCityId
             Optional<CurrentWeather> existingWeather = currentWeatherRepository.findByCityId(city.getId());
 
             if (existingWeather.isPresent() && weatherMapper.isDataFresh(existingWeather.get().getLastUpdated())) {
@@ -69,7 +69,6 @@ public class WeatherServiceImpl implements WeatherService {
             logger.error("Error fetching current weather for {}: {}", cityName, e.getMessage());
 
             return cityService.findByName(cityName)
-                    // FIXED: Changed from findById to findByCityId
                     .flatMap(city -> currentWeatherRepository.findByCityId(city.getId()))
                     .map(weatherMapper::mapToWeatherResponse)
                     .orElseThrow(() -> e); // Rethrow original exception if no stale data exists
@@ -83,26 +82,24 @@ public class WeatherServiceImpl implements WeatherService {
             City city = cityService.findOrCreateCity(cityName);
 
             List<Forecast> existingForecasts = forecastRepository.findByCityIdAndForecastDateGreaterThanOrderByForecastDateAsc(
-                    city.getId(), LocalDateTime.now()
+                    city.getId(), Instant.now()
             );
 
-            if (!existingForecasts.isEmpty() && weatherMapper.isDataFresh(existingForecasts.get(0).getForecastDate().minusDays(1))) {
+            if (!existingForecasts.isEmpty() && weatherMapper.isDataFresh(existingForecasts.get(0).getForecastDate().minus(1, ChronoUnit.DAYS))) {
                 return weatherMapper.mapToForecastResponse(city, existingForecasts);
             }
 
             OpenWeatherMapForecastResponse apiResponse = weatherClient.getForecast(cityName);
             weatherMapper.updateCityFromResponse(city, apiResponse);
 
-            // This now calls our new, efficient helper method
             List<Forecast> newForecasts = refreshForecastDataForCity(city, apiResponse);
 
             return weatherMapper.mapToForecastResponse(city, newForecasts);
         } catch (WeatherApiException e) {
             logger.error("Error fetching forecast for {}: {}", cityName, e.getMessage());
 
-            // Try to return cached data even if it's stale
             City city = cityService.findByName(cityName).orElseThrow(() -> new CityNotFoundException("City not found: " + cityName));
-            List<Forecast> existingForecasts = forecastRepository.findByCityIdAndForecastDateGreaterThanOrderByForecastDateAsc(city.getId(), LocalDateTime.now().minusDays(1));
+            List<Forecast> existingForecasts = forecastRepository.findByCityIdAndForecastDateGreaterThanOrderByForecastDateAsc(city.getId(), Instant.now().minus(1, ChronoUnit.DAYS));
 
             if (!existingForecasts.isEmpty()) {
                 return weatherMapper.mapToForecastResponse(city, existingForecasts);
@@ -136,15 +133,8 @@ public class WeatherServiceImpl implements WeatherService {
         }
     }
 
-    /**
-     * IMPROVEMENT: A private helper method to encapsulate the logic for clearing and
-     * saving new forecast data. This promotes code reuse and simplifies the public methods.
-     */
     private List<Forecast> refreshForecastDataForCity(City city, OpenWeatherMapForecastResponse forecastResponse) {
-        // IMPROVEMENT: Use the efficient bulk-delete method from the repository.
         forecastRepository.deleteByCityId(city.getId());
-
-        // Save new forecasts
         List<Forecast> forecasts = weatherMapper.mapToForecasts(city, forecastResponse);
         return forecastRepository.saveAll(forecasts);
     }
