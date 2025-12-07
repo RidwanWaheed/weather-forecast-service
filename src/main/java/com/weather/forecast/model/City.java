@@ -1,17 +1,19 @@
 package com.weather.forecast.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 
 @Entity
 @Table(name = "cities")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class City {
 
     @Id
@@ -19,6 +21,7 @@ public class City {
     private Long id;
 
     @Column(nullable = false)
+    @EqualsAndHashCode.Include
     private String name;
 
     private String country;
