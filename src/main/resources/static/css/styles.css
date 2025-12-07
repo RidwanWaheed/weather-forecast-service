@@ -96,9 +96,9 @@ body {
 .main-content {
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 2rem 0;
+    padding: 1.5rem 0;
 }
 
 .main-content > .container {
@@ -606,6 +606,6 @@ body {
 
 /* Recent Searches Section on Weather Page */
 .recent-searches-section {
-    margin-top: 2rem;
+    margin-top: 1.25rem;
     text-align: center;
 }
