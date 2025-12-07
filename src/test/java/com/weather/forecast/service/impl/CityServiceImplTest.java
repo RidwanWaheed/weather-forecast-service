@@ -13,7 +13,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -40,18 +41,15 @@ class CityServiceImplTest {
         testCity.setName("London");
         testCity.setCountry("GB");
         testCity.setSearchCount(5);
-        testCity.setLastSearched(LocalDateTime.now().minusDays(1));
+        testCity.setLastSearched(Instant.now().minus(1, ChronoUnit.DAYS));
     }
 
     @Test
     void findOrCreateCity_WhenCityExists_ShouldReturnExistingCity() {
-        // Given
         when(cityRepository.findByNameIgnoreCase("London")).thenReturn(Optional.of(testCity));
 
-        // When
         City result = cityService.findOrCreateCity("London");
 
-        // Then
         assertNotNull(result);
         assertEquals("London", result.getName());
         assertEquals(1L, result.getId());
@@ -61,7 +59,6 @@ class CityServiceImplTest {
 
     @Test
     void findOrCreateCity_WhenCityDoesNotExist_ShouldCreateNewCity() {
-        // Given
         City newCity = new City();
         newCity.setId(2L);
         newCity.setName("Paris");
@@ -70,10 +67,8 @@ class CityServiceImplTest {
         when(cityRepository.findByNameIgnoreCase("Paris")).thenReturn(Optional.empty());
         when(cityRepository.save(any(City.class))).thenReturn(newCity);
 
-        // When
         City result = cityService.findOrCreateCity("Paris");
 
-        // Then
         assertNotNull(result);
         assertEquals("Paris", result.getName());
         assertEquals(2L, result.getId());
@@ -84,13 +79,10 @@ class CityServiceImplTest {
 
     @Test
     void findByName_WhenCityExists_ShouldReturnCity() {
-        // Given
         when(cityRepository.findByNameIgnoreCase("London")).thenReturn(Optional.of(testCity));
 
-        // When
         Optional<City> result = cityService.findByName("London");
 
-        // Then
         assertTrue(result.isPresent());
         assertEquals("London", result.get().getName());
         verify(cityRepository).findByNameIgnoreCase("London");
@@ -98,37 +90,31 @@ class CityServiceImplTest {
 
     @Test
     void findByName_WhenCityDoesNotExist_ShouldReturnEmpty() {
-        // Given
         when(cityRepository.findByNameIgnoreCase("NonExistent")).thenReturn(Optional.empty());
 
-        // When
         Optional<City> result = cityService.findByName("NonExistent");
 
-        // Then
         assertFalse(result.isPresent());
         verify(cityRepository).findByNameIgnoreCase("NonExistent");
     }
 
     @Test
     void getRecentlySearchedCities_ShouldReturnCitiesOrderedByLastSearched() {
-        // Given
         City city1 = new City();
         city1.setName("London");
-        city1.setLastSearched(LocalDateTime.now().minusDays(1));
+        city1.setLastSearched(Instant.now().minus(1, ChronoUnit.DAYS));
 
         City city2 = new City();
         city2.setName("Paris");
-        city2.setLastSearched(LocalDateTime.now().minusDays(2));
+        city2.setLastSearched(Instant.now().minus(2, ChronoUnit.DAYS));
 
         List<City> cities = Arrays.asList(city1, city2);
         Page<City> cityPage = new PageImpl<>(cities);
 
         when(cityRepository.findAll(any(PageRequest.class))).thenReturn(cityPage);
 
-        // When
         List<City> result = cityService.getRecentlySearchedCities(5);
 
-        // Then
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals("London", result.get(0).getName());
@@ -139,7 +125,6 @@ class CityServiceImplTest {
 
     @Test
     void getFrequentlySearchedCities_ShouldReturnCitiesOrderedBySearchCount() {
-        // Given
         City city1 = new City();
         city1.setName("London");
         city1.setSearchCount(10);
@@ -152,10 +137,8 @@ class CityServiceImplTest {
 
         when(cityRepository.findTopSearchedCities(5)).thenReturn(cities);
 
-        // When
         List<City> result = cityService.getFrequentlySearchedCities(5);
 
-        // Then
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals("London", result.get(0).getName());
@@ -165,13 +148,10 @@ class CityServiceImplTest {
 
     @Test
     void saveCity_ShouldReturnSavedCity() {
-        // Given
         when(cityRepository.save(testCity)).thenReturn(testCity);
 
-        // When
         City result = cityService.saveCity(testCity);
 
-        // Then
         assertNotNull(result);
         assertEquals(testCity, result);
         verify(cityRepository).save(testCity);
@@ -179,32 +159,26 @@ class CityServiceImplTest {
 
     @Test
     void incrementSearchCount_ShouldIncrementCountAndUpdateTimestamp() {
-        // Given
-        LocalDateTime beforeIncrement = LocalDateTime.now();
+        Instant beforeIncrement = Instant.now();
         testCity.setSearchCount(5);
         when(cityRepository.save(testCity)).thenReturn(testCity);
 
-        // When
         cityService.incrementSearchCount(testCity);
 
-        // Then
         assertEquals(6, testCity.getSearchCount());
         assertNotNull(testCity.getLastSearched());
         assertTrue(testCity.getLastSearched().isAfter(beforeIncrement) ||
-                testCity.getLastSearched().isEqual(beforeIncrement));
+                testCity.getLastSearched().equals(beforeIncrement));
         verify(cityRepository).save(testCity);
     }
 
     @Test
     void incrementSearchCount_WhenSearchCountIsNull_ShouldSetToOne() {
-        // Given
         testCity.setSearchCount(null);
         when(cityRepository.save(testCity)).thenReturn(testCity);
 
-        // When
         cityService.incrementSearchCount(testCity);
 
-        // Then
         assertEquals(1, testCity.getSearchCount());
         assertNotNull(testCity.getLastSearched());
         verify(cityRepository).save(testCity);
@@ -212,13 +186,10 @@ class CityServiceImplTest {
 
     @Test
     void findByName_ShouldBeCaseInsensitive() {
-        // Given
         when(cityRepository.findByNameIgnoreCase("london")).thenReturn(Optional.of(testCity));
 
-        // When
         Optional<City> result = cityService.findByName("london");
 
-        // Then
         assertTrue(result.isPresent());
         assertEquals("London", result.get().getName());
         verify(cityRepository).findByNameIgnoreCase("london");

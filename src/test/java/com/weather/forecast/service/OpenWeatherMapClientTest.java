@@ -13,6 +13,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -39,7 +41,6 @@ class OpenWeatherMapClientTest {
         apiKey = "test-api-key";
         units = "metric";
 
-        // Use reflection to set private fields or create with constructor
         openWeatherMapClient = new OpenWeatherMapClient(restTemplate, apiUrl, apiKey, units);
     }
 
@@ -47,8 +48,10 @@ class OpenWeatherMapClientTest {
     void getCurrentWeather_WhenSuccessful_ShouldReturnWeatherData() {
         // Given
         String cityName = "London";
-        OpenWeatherMapResponse expectedResponse = new OpenWeatherMapResponse();
-        expectedResponse.setName("London");
+        OpenWeatherMapResponse expectedResponse = new OpenWeatherMapResponse(
+                null, null, null, null, null, null, null, null, null,
+                System.currentTimeMillis() / 1000, null, null, 1L, "London", 200
+        );
 
         when(restTemplate.getForObject(anyString(), eq(OpenWeatherMapResponse.class)))
                 .thenReturn(expectedResponse);
@@ -58,7 +61,7 @@ class OpenWeatherMapClientTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("London", result.getName());
+        assertEquals("London", result.name());
         verify(restTemplate).getForObject(anyString(), eq(OpenWeatherMapResponse.class));
     }
 
@@ -82,10 +85,12 @@ class OpenWeatherMapClientTest {
     void getForecast_WhenSuccessful_ShouldReturnForecastData() {
         // Given
         String cityName = "London";
-        OpenWeatherMapForecastResponse expectedResponse = new OpenWeatherMapForecastResponse();
-        OpenWeatherMapForecastResponse.City city = new OpenWeatherMapForecastResponse.City();
-        city.setName("London");
-        expectedResponse.setCity(city);
+        OpenWeatherMapForecastResponse.City city = new OpenWeatherMapForecastResponse.City(
+                1L, "London", null, "GB", 1000000, 0, 0L, 0L
+        );
+        OpenWeatherMapForecastResponse expectedResponse = new OpenWeatherMapForecastResponse(
+                "200", 0, 0, List.of(), city
+        );
 
         when(restTemplate.getForObject(anyString(), eq(OpenWeatherMapForecastResponse.class)))
                 .thenReturn(expectedResponse);
@@ -95,8 +100,8 @@ class OpenWeatherMapClientTest {
 
         // Then
         assertNotNull(result);
-        assertNotNull(result.getCity());
-        assertEquals("London", result.getCity().getName());
+        assertNotNull(result.city());
+        assertEquals("London", result.city().name());
         verify(restTemplate).getForObject(anyString(), eq(OpenWeatherMapForecastResponse.class));
     }
 
@@ -120,7 +125,10 @@ class OpenWeatherMapClientTest {
     void getCurrentWeather_ShouldConstructCorrectUrl() {
         // Given
         String cityName = "London";
-        OpenWeatherMapResponse response = new OpenWeatherMapResponse();
+        OpenWeatherMapResponse response = new OpenWeatherMapResponse(
+                null, null, null, null, null, null, null, null, null,
+                System.currentTimeMillis() / 1000, null, null, 1L, "London", 200
+        );
 
         when(restTemplate.getForObject(anyString(), eq(OpenWeatherMapResponse.class)))
                 .thenReturn(response);
@@ -143,7 +151,9 @@ class OpenWeatherMapClientTest {
     void getForecast_ShouldConstructCorrectUrl() {
         // Given
         String cityName = "London";
-        OpenWeatherMapForecastResponse response = new OpenWeatherMapForecastResponse();
+        OpenWeatherMapForecastResponse response = new OpenWeatherMapForecastResponse(
+                "200", 0, 0, List.of(), null
+        );
 
         when(restTemplate.getForObject(anyString(), eq(OpenWeatherMapForecastResponse.class)))
                 .thenReturn(response);
@@ -166,7 +176,10 @@ class OpenWeatherMapClientTest {
     void getCurrentWeather_WithSpecialCharactersInCityName_ShouldHandleCorrectly() {
         // Given
         String cityName = "São Paulo";
-        OpenWeatherMapResponse response = new OpenWeatherMapResponse();
+        OpenWeatherMapResponse response = new OpenWeatherMapResponse(
+                null, null, null, null, null, null, null, null, null,
+                System.currentTimeMillis() / 1000, null, null, 1L, "São Paulo", 200
+        );
 
         when(restTemplate.getForObject(anyString(), eq(OpenWeatherMapResponse.class)))
                 .thenReturn(response);

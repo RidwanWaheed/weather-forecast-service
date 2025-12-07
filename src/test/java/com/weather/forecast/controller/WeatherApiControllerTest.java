@@ -5,6 +5,7 @@ import com.weather.forecast.dto.ForecastResponse;
 import com.weather.forecast.dto.WeatherResponse;
 import com.weather.forecast.exception.CityNotFoundException;
 import com.weather.forecast.exception.WeatherApiException;
+import com.weather.forecast.model.WeatherCondition;
 import com.weather.forecast.service.WeatherService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -39,47 +42,50 @@ class WeatherApiControllerTest {
 
     @BeforeEach
     void setUp() {
-        testWeatherResponse = WeatherResponse.builder()
-                .city("London")
-                .country("GB")
-                .temperature(20.0)
-                .humidity(65)
-                .windSpeed(5.2)
-                .windDirection(180)
-                .pressure(1012)
-                .conditions("Partly Cloudy")
-                .description("scattered clouds")
-                .timestamp(LocalDateTime.now())
-                .sunrise(LocalDateTime.now().withHour(6).withMinute(12))
-                .sunset(LocalDateTime.now().withHour(18).withMinute(34))
-                .build();
+        Instant now = Instant.now();
 
-        ForecastResponse.ForecastItem forecastItem1 = ForecastResponse.ForecastItem.builder()
-                .date(LocalDateTime.now().plusDays(1))
-                .temperature(22.0)
-                .humidity(60)
-                .windSpeed(4.8)
-                .conditions("Sunny")
-                .description("clear sky")
-                .probability(0.1)
-                .build();
+        testWeatherResponse = new WeatherResponse(
+                "London",
+                "GB",
+                now,
+                new BigDecimal("20.00"),
+                65,
+                new BigDecimal("5.20"),
+                180,
+                1012,
+                WeatherCondition.CLOUDS,
+                "scattered clouds",
+                now.minus(6, ChronoUnit.HOURS),
+                now.plus(6, ChronoUnit.HOURS)
+        );
 
-        ForecastResponse.ForecastItem forecastItem2 = ForecastResponse.ForecastItem.builder()
-                .date(LocalDateTime.now().plusDays(2))
-                .temperature(18.0)
-                .humidity(70)
-                .windSpeed(6.2)
-                .conditions("Rain")
-                .description("light rain")
-                .probability(0.8)
-                .rainVolume(2.5)
-                .build();
+        ForecastResponse.ForecastItem forecastItem1 = new ForecastResponse.ForecastItem(
+                now.plus(1, ChronoUnit.DAYS),
+                new BigDecimal("22.00"),
+                60,
+                new BigDecimal("4.80"),
+                WeatherCondition.CLEAR,
+                "clear sky",
+                null,
+                new BigDecimal("0.10")
+        );
 
-        testForecastResponse = ForecastResponse.builder()
-                .city("London")
-                .country("GB")
-                .forecasts(Arrays.asList(forecastItem1, forecastItem2))
-                .build();
+        ForecastResponse.ForecastItem forecastItem2 = new ForecastResponse.ForecastItem(
+                now.plus(2, ChronoUnit.DAYS),
+                new BigDecimal("18.00"),
+                70,
+                new BigDecimal("6.20"),
+                WeatherCondition.RAIN,
+                "light rain",
+                new BigDecimal("2.50"),
+                new BigDecimal("0.80")
+        );
+
+        testForecastResponse = new ForecastResponse(
+                "London",
+                "GB",
+                Arrays.asList(forecastItem1, forecastItem2)
+        );
     }
 
     @Test
@@ -95,11 +101,11 @@ class WeatherApiControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.city").value("London"))
                 .andExpect(jsonPath("$.country").value("GB"))
-                .andExpect(jsonPath("$.temperature").value(20.0))
+                .andExpect(jsonPath("$.temperature").value(20.00))
                 .andExpect(jsonPath("$.humidity").value(65))
-                .andExpect(jsonPath("$.windSpeed").value(5.2))
+                .andExpect(jsonPath("$.windSpeed").value(5.20))
                 .andExpect(jsonPath("$.pressure").value(1012))
-                .andExpect(jsonPath("$.conditions").value("Partly Cloudy"))
+                .andExpect(jsonPath("$.conditions").value("Clouds"))
                 .andExpect(jsonPath("$.description").value("scattered clouds"));
     }
 
@@ -180,11 +186,11 @@ class WeatherApiControllerTest {
                 .andExpect(jsonPath("$.country").value("GB"))
                 .andExpect(jsonPath("$.forecasts").isArray())
                 .andExpect(jsonPath("$.forecasts").value(hasSize(2)))
-                .andExpect(jsonPath("$.forecasts[0].temperature").value(22.0))
-                .andExpect(jsonPath("$.forecasts[0].conditions").value("Sunny"))
-                .andExpect(jsonPath("$.forecasts[1].temperature").value(18.0))
+                .andExpect(jsonPath("$.forecasts[0].temperature").value(22.00))
+                .andExpect(jsonPath("$.forecasts[0].conditions").value("Clear"))
+                .andExpect(jsonPath("$.forecasts[1].temperature").value(18.00))
                 .andExpect(jsonPath("$.forecasts[1].conditions").value("Rain"))
-                .andExpect(jsonPath("$.forecasts[1].rainVolume").value(2.5));
+                .andExpect(jsonPath("$.forecasts[1].rainVolume").value(2.50));
     }
 
     @Test

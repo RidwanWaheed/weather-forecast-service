@@ -8,6 +8,7 @@ import com.weather.forecast.exception.WeatherApiException;
 import com.weather.forecast.model.City;
 import com.weather.forecast.model.CurrentWeather;
 import com.weather.forecast.model.Forecast;
+import com.weather.forecast.model.WeatherCondition;
 import com.weather.forecast.repository.CurrentWeatherRepository;
 import com.weather.forecast.repository.ForecastRepository;
 import com.weather.forecast.service.CityService;
@@ -20,7 +21,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -65,54 +68,50 @@ class WeatherServiceImplTest {
         testCurrentWeather = new CurrentWeather();
         testCurrentWeather.setId(1L);
         testCurrentWeather.setCity(testCity);
-        testCurrentWeather.setTemperature(20.0);
-        testCurrentWeather.setLastUpdated(LocalDateTime.now().minusMinutes(10));
+        testCurrentWeather.setTemperature(new BigDecimal("20.00"));
+        testCurrentWeather.setLastUpdated(Instant.now().minus(10, ChronoUnit.MINUTES));
 
-        testApiResponse = new OpenWeatherMapResponse();
-        testApiResponse.setName("London");
+        testApiResponse = new OpenWeatherMapResponse(
+                null, null, null, null, null, null, null, null, null,
+                System.currentTimeMillis() / 1000, null, null, 1L, "London", 200
+        );
 
-        testWeatherResponse = WeatherResponse.builder()
-                .city("London")
-                .country("GB")
-                .temperature(20.0)
-                .build();
+        testWeatherResponse = new WeatherResponse(
+                "London", "GB", Instant.now(), new BigDecimal("20.00"),
+                50, new BigDecimal("5.00"), 180, 1013,
+                WeatherCondition.CLEAR, "Clear sky", Instant.now(), Instant.now()
+        );
     }
 
     @Test
     void getCurrentWeather_WhenFreshDataExists_ShouldReturnCachedData() {
-        // Given
         when(cityService.findOrCreateCity("London")).thenReturn(testCity);
         when(currentWeatherRepository.findByCityId(1L)).thenReturn(Optional.of(testCurrentWeather));
-        when(weatherMapper.isDataFresh(any(LocalDateTime.class))).thenReturn(true);
+        when(weatherMapper.isDataFresh(any(Instant.class))).thenReturn(true);
         when(weatherMapper.mapToWeatherResponse(testCurrentWeather)).thenReturn(testWeatherResponse);
 
-        // When
         WeatherResponse result = weatherService.getCurrentWeather("London");
 
-        // Then
         assertNotNull(result);
-        assertEquals("London", result.getCity());
+        assertEquals("London", result.city());
         verify(cityService).incrementSearchCount(testCity);
         verify(weatherClient, never()).getCurrentWeather(anyString());
     }
 
     @Test
     void getCurrentWeather_WhenDataIsStale_ShouldFetchFromAPI() {
-        // Given
         when(cityService.findOrCreateCity("London")).thenReturn(testCity);
         when(currentWeatherRepository.findByCityId(1L)).thenReturn(Optional.of(testCurrentWeather));
-        when(weatherMapper.isDataFresh(any(LocalDateTime.class))).thenReturn(false);
+        when(weatherMapper.isDataFresh(any(Instant.class))).thenReturn(false);
         when(weatherClient.getCurrentWeather("London")).thenReturn(testApiResponse);
         when(weatherMapper.mapToCurrentWeather(testCity, testApiResponse)).thenReturn(testCurrentWeather);
         when(currentWeatherRepository.save(testCurrentWeather)).thenReturn(testCurrentWeather);
         when(weatherMapper.mapToWeatherResponse(testCurrentWeather)).thenReturn(testWeatherResponse);
 
-        // When
         WeatherResponse result = weatherService.getCurrentWeather("London");
 
-        // Then
         assertNotNull(result);
-        assertEquals("London", result.getCity());
+        assertEquals("London", result.city());
         verify(weatherClient).getCurrentWeather("London");
         verify(weatherMapper).updateCityFromResponse(testCity, testApiResponse);
         verify(currentWeatherRepository).save(testCurrentWeather);
@@ -120,94 +119,77 @@ class WeatherServiceImplTest {
 
     @Test
     void getCurrentWeather_WhenAPIFails_ShouldReturnCachedDataIfAvailable() {
-        // Given
         when(cityService.findOrCreateCity("London")).thenReturn(testCity);
         when(currentWeatherRepository.findByCityId(1L)).thenReturn(Optional.of(testCurrentWeather));
-        when(weatherMapper.isDataFresh(any(LocalDateTime.class))).thenReturn(false);
+        when(weatherMapper.isDataFresh(any(Instant.class))).thenReturn(false);
         when(weatherClient.getCurrentWeather("London")).thenThrow(new WeatherApiException("API Error"));
         when(cityService.findByName("London")).thenReturn(Optional.of(testCity));
-        when(currentWeatherRepository.findByCityId(1L)).thenReturn(Optional.of(testCurrentWeather));
         when(weatherMapper.mapToWeatherResponse(testCurrentWeather)).thenReturn(testWeatherResponse);
 
-        // When
         WeatherResponse result = weatherService.getCurrentWeather("London");
 
-        // Then
         assertNotNull(result);
-        assertEquals("London", result.getCity());
+        assertEquals("London", result.city());
     }
 
     @Test
     void getCurrentWeather_WhenAPIFailsAndNoCachedData_ShouldThrowException() {
-        // Given
         when(cityService.findOrCreateCity("London")).thenReturn(testCity);
         when(currentWeatherRepository.findByCityId(1L)).thenReturn(Optional.empty());
         when(weatherClient.getCurrentWeather("London")).thenThrow(new WeatherApiException("API Error"));
         when(cityService.findByName("London")).thenReturn(Optional.empty());
 
-        // When & Then
         assertThrows(WeatherApiException.class, () -> weatherService.getCurrentWeather("London"));
     }
 
     @Test
     void getForecast_WhenFreshDataExists_ShouldReturnCachedData() {
-        // Given
         Forecast forecast1 = new Forecast();
-        forecast1.setForecastDate(LocalDateTime.now().plusDays(1)); // FIXED: Set proper date
-        forecast1.setTemperature(22.0);
+        forecast1.setForecastDate(Instant.now().plus(1, ChronoUnit.DAYS));
+        forecast1.setTemperature(new BigDecimal("22.00"));
 
         Forecast forecast2 = new Forecast();
-        forecast2.setForecastDate(LocalDateTime.now().plusDays(2)); // FIXED: Set proper date
-        forecast2.setTemperature(25.0);
+        forecast2.setForecastDate(Instant.now().plus(2, ChronoUnit.DAYS));
+        forecast2.setTemperature(new BigDecimal("25.00"));
 
         List<Forecast> testForecasts = Arrays.asList(forecast1, forecast2);
 
-        ForecastResponse testForecastResponse = ForecastResponse.builder()
-                .city("London")
-                .country("GB")
-                .build();
+        ForecastResponse testForecastResponse = new ForecastResponse("London", "GB", List.of());
 
         when(cityService.findOrCreateCity("London")).thenReturn(testCity);
-        when(forecastRepository.findByCityIdAndForecastDateGreaterThanOrderByForecastDateAsc(eq(1L), any(LocalDateTime.class)))
+        when(forecastRepository.findByCityIdAndForecastDateGreaterThanOrderByForecastDateAsc(eq(1L), any(Instant.class)))
                 .thenReturn(testForecasts);
-        when(weatherMapper.isDataFresh(any(LocalDateTime.class))).thenReturn(true);
+        when(weatherMapper.isDataFresh(any(Instant.class))).thenReturn(true);
         when(weatherMapper.mapToForecastResponse(testCity, testForecasts)).thenReturn(testForecastResponse);
 
-        // When
         ForecastResponse result = weatherService.getForecast("London");
 
-        // Then
         assertNotNull(result);
-        assertEquals("London", result.getCity());
+        assertEquals("London", result.city());
         verify(weatherClient, never()).getForecast(anyString());
     }
 
     @Test
     void getForecast_WhenDataIsStale_ShouldFetchFromAPI() {
-        // Given
-        OpenWeatherMapForecastResponse apiResponse = new OpenWeatherMapForecastResponse();
+        OpenWeatherMapForecastResponse apiResponse = new OpenWeatherMapForecastResponse(
+                "200", 0, 0, List.of(), null
+        );
         List<Forecast> newForecasts = Arrays.asList(new Forecast(), new Forecast());
-        ForecastResponse testForecastResponse = ForecastResponse.builder()
-                .city("London")
-                .country("GB")
-                .build();
+        ForecastResponse testForecastResponse = new ForecastResponse("London", "GB", List.of());
 
         when(cityService.findOrCreateCity("London")).thenReturn(testCity);
-        when(forecastRepository.findByCityIdAndForecastDateGreaterThanOrderByForecastDateAsc(eq(1L), any(LocalDateTime.class)))
+        when(forecastRepository.findByCityIdAndForecastDateGreaterThanOrderByForecastDateAsc(eq(1L), any(Instant.class)))
                 .thenReturn(Arrays.asList());
         when(weatherClient.getForecast("London")).thenReturn(apiResponse);
-        // Fix: Use doNothing for void method
         doNothing().when(forecastRepository).deleteByCityId(1L);
         when(weatherMapper.mapToForecasts(testCity, apiResponse)).thenReturn(newForecasts);
         when(forecastRepository.saveAll(newForecasts)).thenReturn(newForecasts);
         when(weatherMapper.mapToForecastResponse(testCity, newForecasts)).thenReturn(testForecastResponse);
 
-        // When
         ForecastResponse result = weatherService.getForecast("London");
 
-        // Then
         assertNotNull(result);
-        assertEquals("London", result.getCity());
+        assertEquals("London", result.city());
         verify(weatherClient).getForecast("London");
         verify(forecastRepository).deleteByCityId(1L);
         verify(forecastRepository).saveAll(newForecasts);
@@ -215,9 +197,13 @@ class WeatherServiceImplTest {
 
     @Test
     void refreshWeatherData_ShouldUpdateBothCurrentAndForecastData() {
-        // Given
-        OpenWeatherMapResponse currentResponse = new OpenWeatherMapResponse();
-        OpenWeatherMapForecastResponse forecastResponse = new OpenWeatherMapForecastResponse();
+        OpenWeatherMapResponse currentResponse = new OpenWeatherMapResponse(
+                null, null, null, null, null, null, null, null, null,
+                System.currentTimeMillis() / 1000, null, null, 1L, "London", 200
+        );
+        OpenWeatherMapForecastResponse forecastResponse = new OpenWeatherMapForecastResponse(
+                "200", 0, 0, List.of(), null
+        );
         List<Forecast> forecasts = Arrays.asList(new Forecast());
 
         when(weatherClient.getCurrentWeather("London")).thenReturn(currentResponse);
@@ -226,13 +212,10 @@ class WeatherServiceImplTest {
         when(currentWeatherRepository.save(testCurrentWeather)).thenReturn(testCurrentWeather);
         when(weatherMapper.mapToForecasts(testCity, forecastResponse)).thenReturn(forecasts);
         when(forecastRepository.saveAll(forecasts)).thenReturn(forecasts);
-        // Fix: Use doNothing for void method
         doNothing().when(forecastRepository).deleteByCityId(1L);
 
-        // When
         weatherService.refreshWeatherData(testCity);
 
-        // Then
         verify(weatherClient).getCurrentWeather("London");
         verify(weatherClient).getForecast("London");
         verify(currentWeatherRepository).save(testCurrentWeather);
@@ -242,13 +225,10 @@ class WeatherServiceImplTest {
 
     @Test
     void refreshWeatherData_WhenAPIFails_ShouldLogErrorAndContinue() {
-        // Given
         when(weatherClient.getCurrentWeather("London")).thenThrow(new WeatherApiException("API Error"));
 
-        // When
         assertDoesNotThrow(() -> weatherService.refreshWeatherData(testCity));
 
-        // Then
         verify(weatherClient).getCurrentWeather("London");
         verify(currentWeatherRepository, never()).save(any());
     }

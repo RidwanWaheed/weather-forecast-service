@@ -3,6 +3,7 @@ package com.weather.forecast.controller;
 import com.weather.forecast.dto.ForecastResponse;
 import com.weather.forecast.dto.WeatherResponse;
 import com.weather.forecast.model.City;
+import com.weather.forecast.model.WeatherCondition;
 import com.weather.forecast.service.CityService;
 import com.weather.forecast.service.WeatherService;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +13,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -40,34 +43,39 @@ class WebControllerTest {
 
     @BeforeEach
     void setUp() {
-        testWeatherResponse = WeatherResponse.builder()
-                .city("London")
-                .country("GB")
-                .temperature(20.0)
-                .humidity(65)
-                .windSpeed(5.2)
-                .conditions("Partly Cloudy")
-                .description("scattered clouds")
-                .timestamp(LocalDateTime.now())
-                .sunrise(LocalDateTime.now().withHour(6).withMinute(12))
-                .sunset(LocalDateTime.now().withHour(18).withMinute(34))
-                .build();
+        Instant now = Instant.now();
 
-        ForecastResponse.ForecastItem forecastItem = ForecastResponse.ForecastItem.builder()
-                .date(LocalDateTime.now().plusDays(1))
-                .temperature(22.0)
-                .humidity(60)
-                .windSpeed(4.8)
-                .conditions("Sunny")
-                .description("clear sky")
-                .probability(0.1)
-                .build();
+        testWeatherResponse = new WeatherResponse(
+                "London",
+                "GB",
+                now,
+                new BigDecimal("20.00"),
+                65,
+                new BigDecimal("5.20"),
+                180,
+                1012,
+                WeatherCondition.CLOUDS,
+                "scattered clouds",
+                now.minus(6, ChronoUnit.HOURS),
+                now.plus(6, ChronoUnit.HOURS)
+        );
 
-        testForecastResponse = ForecastResponse.builder()
-                .city("London")
-                .country("GB")
-                .forecasts(Arrays.asList(forecastItem))
-                .build();
+        ForecastResponse.ForecastItem forecastItem = new ForecastResponse.ForecastItem(
+                now.plus(1, ChronoUnit.DAYS),
+                new BigDecimal("22.00"),
+                60,
+                new BigDecimal("4.80"),
+                WeatherCondition.CLEAR,
+                "clear sky",
+                null,
+                new BigDecimal("0.10")
+        );
+
+        testForecastResponse = new ForecastResponse(
+                "London",
+                "GB",
+                Arrays.asList(forecastItem)
+        );
 
         City city1 = new City();
         city1.setId(1L);
