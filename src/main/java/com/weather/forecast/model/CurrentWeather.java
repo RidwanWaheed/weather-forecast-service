@@ -1,12 +1,12 @@
 package com.weather.forecast.model;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.Instant;
 
 @Entity
 @Table(name = "current_weather")
@@ -21,27 +21,30 @@ public class CurrentWeather {
 
     @OneToOne
     @JoinColumn(name = "city_id", nullable = false)
-    private  City city;
+    private City city;
 
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 
-    private Double temperature;
+    @Column(precision = 5, scale = 2)
+    private BigDecimal temperature;
 
     private Integer humidity;
 
-    private Double windSpeed;
+    @Column(precision = 5, scale = 2)
+    private BigDecimal windSpeed;
 
     private Integer windDirection;
 
     private Integer pressure;
 
-    private  String weatherMain;
+    @Enumerated(EnumType.STRING)
+    private WeatherCondition weatherMain;
 
     private String weatherDescription;
 
-    private LocalDateTime sunset;
+    private Instant sunset;
 
-    private LocalDateTime sunrise;
+    private Instant sunrise;
 
-    private LocalDateTime lastUpdated;
+    private Instant lastUpdated;
 }

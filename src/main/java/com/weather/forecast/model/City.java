@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "cities")
@@ -27,12 +27,12 @@ public class City {
 
     private Double longitude;
 
-    private LocalDateTime lastSearched;
+    private Instant lastSearched;
 
     private Integer searchCount = 0;
 
     public void incrementSearchCount() {
         this.searchCount = (this.searchCount == null) ? 1 : this.searchCount + 1;
-        this.lastSearched = LocalDateTime.now();
+        this.lastSearched = Instant.now();
     }
 }

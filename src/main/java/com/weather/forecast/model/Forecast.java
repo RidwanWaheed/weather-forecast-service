@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.Instant;
 
 @Entity
 @Table(name = "forecasts")
@@ -22,11 +23,13 @@ public class Forecast {
     @JoinColumn(name = "city_id", nullable = false)
     private City city;
 
-    private LocalDateTime forecastDate;
+    private Instant forecastDate;
 
-    private Double temperature;
+    @Column(precision = 5, scale = 2)
+    private BigDecimal temperature;
 
-    private Double windSpeed;
+    @Column(precision = 5, scale = 2)
+    private BigDecimal windSpeed;
 
     private Integer windDirection;
 
@@ -34,11 +37,14 @@ public class Forecast {
 
     private Integer humidity;
 
-    private String weatherMain;
+    @Enumerated(EnumType.STRING)
+    private WeatherCondition weatherMain;
 
     private String weatherDescription;
 
-    private Double rainVolume;
+    @Column(precision = 6, scale = 2)
+    private BigDecimal rainVolume;
 
-    private Double probability;
+    @Column(precision = 3, scale = 2)
+    private BigDecimal probability;
 }
