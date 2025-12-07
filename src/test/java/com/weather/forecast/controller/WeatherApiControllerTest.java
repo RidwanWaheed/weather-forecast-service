@@ -236,15 +236,12 @@ class WeatherApiControllerTest {
     }
 
     @Test
-    void getCurrentWeather_WithEmptyStringCity_ShouldStillCallService() throws Exception {
-        // Given
-        when(weatherService.getCurrentWeather("")).thenReturn(testWeatherResponse);
-
-        // When & Then
+    void getCurrentWeather_WithEmptyStringCity_ShouldReturnBadRequest() throws Exception {
+        // When & Then - Empty city should fail validation
         mockMvc.perform(get("/api/weather/current")
                         .param("city", "")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest());
     }
 
     @Test

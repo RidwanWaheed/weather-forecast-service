@@ -13,7 +13,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=weather_user
       - SPRING_DATASOURCE_PASSWORD=weather_password
       - SPRING_DEVTOOLS_RESTART_ENABLED=true
-      - OPENWEATHERMAP_API_KEY=${OPENWEATHERMAP_API_KEY:-6d0423d1839c9e30fab36f5f143cf76c}
+      - OPENWEATHERMAP_API_KEY=${OPENWEATHERMAP_API_KEY:?Set OPENWEATHERMAP_API_KEY environment variable}
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     volumes:
       - ..:/app:delegated
