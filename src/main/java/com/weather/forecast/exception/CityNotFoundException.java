@@ -1,5 +1,6 @@
 package com.weather.forecast.exception;
 
+/** Thrown when a requested city cannot be found. */
 public class CityNotFoundException extends RuntimeException {
 
     public CityNotFoundException(String message) {

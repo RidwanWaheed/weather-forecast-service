@@ -5,6 +5,7 @@ import com.weather.forecast.model.City;
 import java.util.List;
 import java.util.Optional;
 
+/** Manages city entities and tracks search statistics. */
 public interface CityService {
 
     City findOrCreateCity(String cityName);
