@@ -32,7 +32,7 @@ A Spring Boot web application that provides weather forecasts for cities using t
 
 2. Run with Docker:
    ```bash
-   docker-compose up --build -d
+   make up
    ```
 
 3. Access the application:
@@ -110,20 +110,19 @@ src/
 ./mvnw clean package
 ```
 
-## Docker Commands
+## Make Commands
 
 ```bash
-# Start application
-docker-compose up -d
+make build   # Build the application
+make test    # Run tests
+make run     # Run locally
+make clean   # Clean everything
 
-# View logs
-docker-compose logs -f app
-
-# Stop application
-docker-compose down
-
-# Clean up
-docker-compose down -v
+make up      # Start containers
+make down    # Stop containers
+make dev     # Start dev containers
+make logs    # View logs
+make db      # Database shell
 ```
 
 ## License

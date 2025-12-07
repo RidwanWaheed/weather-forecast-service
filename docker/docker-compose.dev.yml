@@ -1,8 +1,8 @@
 services:
   app-dev:
     build:
-      context: .
-      dockerfile: Dockerfile.dev
+      context: ..
+      dockerfile: docker/Dockerfile.dev
     container_name: weather-forecast-app-dev
     ports:
       - "8080:8080"
@@ -16,7 +16,7 @@ services:
       - OPENWEATHERMAP_API_KEY=${OPENWEATHERMAP_API_KEY:-6d0423d1839c9e30fab36f5f143cf76c}
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     volumes:
-      - .:/app:delegated
+      - ..:/app:delegated
       - maven_cache:/root/.m2
     depends_on:
       db-dev:
@@ -37,7 +37,7 @@ services:
       - "5433:5432"  # Different port to avoid conflicts
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
-      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     restart: unless-stopped
     networks:
       - weather-network-dev

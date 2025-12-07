@@ -39,7 +39,5 @@ src/main/resources/application-local.properties
 logs/
 *.log
 
-### Project Documentation ###
-CLAUDE.md
-LEARNING_NOTES.md
-REFACTORING.md
+### Personal Notes ###
+ridwan/
