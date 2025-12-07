@@ -41,3 +41,6 @@ logs/
 
 ### Personal Notes ###
 ridwan/
+
+### Environment ###
+.env

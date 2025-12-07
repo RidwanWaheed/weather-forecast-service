@@ -16,12 +16,10 @@ RUN ./mvnw dependency:go-offline -B
 # Expose ports
 EXPOSE 8080 5005
 
-# Create volume mount point
-VOLUME /app
-
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
 # Run with Spring Boot DevTools for hot reloading
-CMD ["./mvnw", "spring-boot:run", "-Dspring-boot.run.jvmArguments=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"]
+# Debug args are passed via JAVA_TOOL_OPTIONS in docker-compose.dev.yml
+CMD ["./mvnw", "spring-boot:run"]

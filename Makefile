@@ -1,5 +1,11 @@
 .PHONY: help build test run clean up down dev logs db
 
+# Load .env file if it exists
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
 COMPOSE := docker-compose -f docker/docker-compose.yml
 COMPOSE_DEV := docker-compose -f docker/docker-compose.dev.yml
 
