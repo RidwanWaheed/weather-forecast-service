@@ -2,6 +2,8 @@
 
 A Spring Boot application that provides current weather and 5-day forecasts via REST API and web interface, powered by OpenWeatherMap.
 
+![Screenshot](docs/screenshot.png)
+
 ## Tech Stack
 
 <p>
